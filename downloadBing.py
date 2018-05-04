@@ -4,15 +4,9 @@ import requests
 import cv2
 import os
 import configparser
+from os import listdir
+from os.path import isfile, join
 
-# ap = argparse.ArgumentParser()
-# ap.add_argument("-q", "--query", required=True,
-# 	help="search query to search Bing Image API for")
-# # ap.add_argument("-k", "--Key", required=True,
-# # 	help="txt file to config prgoram API_KEY, MAX_RESULTS, GROUP_SIZE")
-# ap.add_argument("-o", "--output", required=True,
-# 	help="path to output directory of images")
-# args = vars(ap.parse_args())
 
 config = configparser.ConfigParser()
 config.sections()
@@ -29,7 +23,7 @@ EXCEPTIONS = set([IOError, FileNotFoundError,
                   exceptions.ConnectionError, exceptions.Timeout])
 
 # Config
-keyword = "BNK48"
+keyword = "mimikyu"
 headers = {"Ocp-Apim-Subscription-Key": API_KEY}
 params = {"q": keyword, "offset": 0, "count": GROUP_SIZE}
 
@@ -46,10 +40,13 @@ print("[INFO] Check folder [{}] ...".format(keyword))
 directory = os.path.join(os.getcwd(),keyword)
 if not os.path.exists(directory):
     print("[INFO] Check folder [{}] there is not exists. ...".format(keyword))
-    os.makedirs(directory)
+    os.mkdir(directory)
     print("[INFO] Create folder [{}] successful. ...".format(keyword))
+# else:
+#     onlyfiles = [f for f in listdir(directory) if isfile(join(directory, f))]
+#     print(onlyfiles)
 
-total = 0
+count = 0
 for offset in range(0, numberImages, GROUP_SIZE):
     print("[INFO] request images no.{}- to no.{}...".format(offset, offset + GROUP_SIZE))
     params["offset"] = offset
@@ -59,16 +56,25 @@ for offset in range(0, numberImages, GROUP_SIZE):
     test = results["value"]
     listUrls = [img["contentUrl"] for img in results["value"]]
     for url in listUrls:
-        print("[INFO] start saving image No. {}...".format(total))
+        print("[INFO] start saving image No. {}...".format(count))
         try:
             print("[INFO] fetching: {}".format(url))
             requestFile = requests.get(url, timeout=30)
-            fileName = keyword + '_' + str(total).zfill(6) + url[url.rfind("."):]
+            fileName = keyword + '_' + str(count).zfill(6) + url[url.rfind("."):]
             saveDirectory = os.path.join(directory,fileName)
             f = open(saveDirectory, "wb")
             f.write(requestFile.content)
             f.close()
+            image = cv2.imread(saveDirectory)
+
+            # if the image is `None` then we could not properly load the
+            # image from disk (so it should be ignored)
+            if image is None:
+                print("[INFO] deleting: {}...".format(fileName))
+                os.remove(saveDirectory)
+                continue
         except Exception as e:
+            print("[ERR] Skipping >> URL {} doesn't load...".format(url))
             print("[ERR] {}... ".format(e))
             continue
-        total += 1
+        count += 1
