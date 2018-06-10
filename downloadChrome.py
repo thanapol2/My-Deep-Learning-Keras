@@ -7,9 +7,16 @@ import argparse
 import requests
 import cv2
 
+#
+# ap = argparse.ArgumentParser()
+# ap.add_argument("-k", "--keyword", required=True,
+# 	help="path to input dataset")
+# args = vars(ap.parse_args())
+
 MAX_RANGES = 250
 
-keyword = "mimikyu"
+# keyword = args["keyword"]
+keyword = "test"
 googleSearch = "https://www.google.co.in/search?q="+keyword+"&source=lnms&tbm=isch"
 browser = webdriver.Chrome()
 browser.get(googleSearch)
@@ -43,14 +50,14 @@ for x in browser.find_elements_by_xpath('//div[contains(@class,"rg_meta")]'):
         f = open(saveDirectory, "wb")
         f.write(requestFile.content)
         f.close()
-        image = cv2.imread(saveDirectory)
-
-        # if the image is `None` then we could not properly load the
-        # image from disk (so it should be ignored)
-        if image is None:
-            print("[INFO] deleting: {}...".format(fileName))
-            os.remove(saveDirectory)
-            continue
+        # image = cv2.imread(saveDirectory)
+        #
+        # # if the image is `None` then we could not properly load the
+        # # image from disk (so it should be ignored)
+        # if image is None:
+        #     print("[INFO] deleting: {}...".format(fileName))
+        #     os.remove(saveDirectory)
+        #     continue
     except Exception as e:
         print("[ERR] Skipping >> URL {} doesn't load...".format(url))
         print("[ERR] {}... ".format(e))
